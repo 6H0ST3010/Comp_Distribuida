@@ -1,1 +1,2 @@
-# Comp_Distribuida
+# Computacao Distribuida
+Repositório que contem as aulas práticas
