@@ -1,0 +1,133 @@
+/*Estilo geral*/
+body{
+    font-family: 'Times New Roman', Times, serif;
+    background:azure;
+    color: black;
+    padding: 20px;
+}
+
+/*Cabecalho*/
+.cabecalho{
+    display: flex;
+    justify-content: flex-end;
+}
+
+/*Título*/
+h1{
+    text-align: center;
+    color: darkblue;
+}
+
+/*Tabela geral*/
+table{
+    width: 80%;
+    border-collapse: collapse;
+    border-radius: 15px;
+    overflow: hidden;
+    background-color:thistle;
+    margin: auto;
+}
+
+/*Linhas e colunas da tabela*/
+td, th{
+    padding: 10px;
+    text-align: left;
+}
+
+/*links*/
+a{
+    color:darkcyan;
+    font-weight: bold;
+    transition: color 0.5s;
+}
+
+a:hover{
+    color:skyblue;
+}
+
+/* Conteúdo principal */
+.conteudo {
+    max-width: 800px;
+    margin: 40px auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 15px;
+}
+
+.conteudo2 {
+    max-width: 1200px;
+    width: 90%;
+    margin: 40px auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 15px;
+}
+
+/* Navegação */
+.navegacao a {
+    margin-left: 15px;
+}
+
+/* Botões simples */
+.botoes {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.botao,
+button.botao,
+input.botao {
+    border: none;
+    outline: none;
+    appearance: none;
+    text-decoration: none;
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: darkcyan;
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    margin: 0 10px;
+}
+
+.botao:hover {
+    background-color: skyblue;
+    color: white;
+}
+
+/* Formulários */
+form {
+    text-align: center;
+}
+
+fieldset {
+    border-radius: 15px;
+    padding: 20px;
+    width: 300px;
+    margin: auto;
+}
+
+.fieldset2 {
+    border-radius: 15px;
+    padding: 20px;
+    width: 500px;
+    margin: auto;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="url"] {
+    width: 90%;
+    padding: 8px;
+    margin-top: 5px;
+}
+
+.img-loja {
+    max-width: 150px;
+    max-height: 150px;
+    width: auto;
+    height: auto;
+    border-radius: 10px;
+    object-fit: cover;
+}

@@ -1,0 +1,29 @@
+# Ignorar o ambiente virtual Python
+*/venv/
+*/.env
+*/.venv
+*/*.pyc
+*/__pycache__/
+*/*.pyo
+*/*.pyd
+
+# Ignorar logs e ficheiros temporários
+*/*.log
+tmp/
+
+# Ignorar scripts windows
+*/*.bat
+*.bat 
+
+# Ignorar ficheiros do Git
+.git
+.gitignore
+
+# Ignorar dependências instaladas localmente
+requirements.txt.lock
+
+# Ignorar ficheiros "Docker"
+.dockerignore
+Dockerfile
+compose.yaml
+ReadME.md

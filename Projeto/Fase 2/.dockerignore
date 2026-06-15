@@ -1,0 +1,25 @@
+# Ambiente virtual Python
+*/venv/
+*/.env
+*/.venv
+*/*.pyc
+*/__pycache__/
+*/*.pyo
+*/*.pyd
+
+# Logs e temporários
+*/*.log
+tmp/
+
+# Scripts Windows
+*/*.bat
+*.bat
+
+# Git
+.git
+.gitignore
+
+# Docker
+.dockerignore
+compose.yaml
+ReadME.md
