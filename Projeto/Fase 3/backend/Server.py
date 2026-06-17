@@ -1,9 +1,10 @@
-from flask import Flask, redirect, send_file, request, render_template, session
+from flask import Flask, redirect, send_file, request, render_template, session, jsonify
 import os
 import logging
 import json
 import re
 import requests as http
+from requests.auth import HTTPBasicAuth
 import threading
 import paho.mqtt.client as mqtt
 
@@ -23,6 +24,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = 'chave'
 
 logging.basicConfig(level=logging.DEBUG)
+
+WEATHER_API_BASE = "https://cjsg.ddns.net:8443/weather"
+WEATHER_AUTH = HTTPBasicAuth("cd", '1qaz"WSX')
 
 dados_mqtt_socket = {
     "voltage": 0,
@@ -111,6 +115,31 @@ def iniciar_mqtt():
 thread_mqtt = threading.Thread(target=iniciar_mqtt, daemon=True)
 thread_mqtt.start()
 
+@app.route('/api/weather/values', methods=['GET'])
+def get_local_weather_values():
+    try:
+        url = f"{WEATHER_API_BASE}/values"
+        response = http.get(url, auth=WEATHER_AUTH, timeout=5, verify=False)
+        if response.status_code != 200:
+            return jsonify({"temperature": 0, "humidity": 0, "name": "Indisponível"}), 200
+        return jsonify(response.json()), 200
+    except Exception as e:
+        logging.error(f"Erro no Proxy Weather Values: {e}")
+        return jsonify({"temperature": 0, "humidity": 0, "name": "Erro Conexão"}), 200
+
+
+@app.route('/api/weather/position', methods=['GET'])
+def get_local_weather_position():
+    try:
+        url = f"{WEATHER_API_BASE}/position"
+        response = http.get(url, auth=WEATHER_AUTH, timeout=5, verify=False)
+        if response.status_code != 200:
+            return jsonify({"latitude": 0, "longitude": 0, "name": "Indisponível"}), 200
+        return jsonify(response.json()), 200
+    except Exception as e:
+        logging.error(f"Erro no Proxy Weather Position: {e}")
+        return jsonify({"latitude": 0, "longitude": 0, "name": "Erro Conexão"}), 200
+    
 @app.route('/dashboard')
 def dashboard():
     if 'username' not in session:
@@ -118,12 +147,10 @@ def dashboard():
     username = session['username']
     if not username:
         return redirect('/Login')
-    # Renderiza o novo template do dashboard passando o utilizador logado
     return render_template('dashboard.html', username=username)
 
 @app.route('/api/iot/socket')
 def api_iot_socket():
-    # Endpoint interno para o JavaScript do Front-end ler os dados MQTT que o Python recolheu
     return jsonify(dados_mqtt_socket)
 
 

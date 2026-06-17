@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar o código da aplicação (templates, static e Server.py)
 COPY . .
 
-CMD ["python", "Server.py"]
+CMD ["python", "-u", "Server.py"]

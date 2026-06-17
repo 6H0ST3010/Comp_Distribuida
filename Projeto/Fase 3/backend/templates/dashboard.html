@@ -5,6 +5,25 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='CSS/Geral.css') }}">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        #map {
+            height: 300px;
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body class="body2">
 
@@ -19,82 +38,178 @@
 
 <main class="conteudo2">
     <h1>Dashboard de Sensores e Atuadores IoT</h1>
-    <p>Acompanhamento em tempo real dos dispositivos conectados (REST API & MQTT).</p>
+    <p>Monitorização de Sockets de Energia via MQTT e Estação Centralizada via API REST local (Proxy anti-CORS).</p>
 
     <div class="dashboard-grid">
         
         <div class="card" id="weather-card">
-            <h3>Estação Meteorológica (Acesso: API REST)</h3>
+            <h3>Estação Meteorológica (REST Local)</h3>
             <div class="metric">Temperatura: <span class="value" id="temp-val">A carregar...</span></div>
             <div class="metric">Humidade: <span class="value" id="hum-val">A carregar...</span></div>
             <div class="metric">Localização: <span class="value" id="weather-loc">-</span></div>
+            
+            <div class="chart-container">
+                <canvas id="weatherChart"></canvas>
+            </div>
             <div class="timestamp" id="weather-time">Última atualização: -</div>
         </div>
 
         <div class="card" id="socket-card">
-            <h3>Tomada Inteligente (Acesso: MQTT)</h3>
-            <div class="metric">Potência (Power): <span class="value" id="power-val">A carregar...</span></div>
-            <div class="metric">Tensão (Voltage): <span class="value" id="volts-val">A carregar...</span></div>
-            <div class="metric">Corrente (Current): <span class="value" id="current-val">A carregar...</span></div>
+            <h3>Tomada Inteligente (Broker MQTT)</h3>
+            <div class="metric">Potência: <span class="value" id="power-val">A carregar...</span></div>
+            <div class="metric">Tensão / Corrente: <span class="value" id="volts-current-val">A carregar...</span></div>
             <div class="metric">Consumo Total: <span class="value" id="energy-val">A carregar...</span></div>
-            <div class="metric">Frequência: <span class="value" id="freq-val">A carregar...</span></div>
+            
+            <div class="chart-container">
+                <canvas id="socketChart"></canvas>
+            </div>
             <div class="timestamp" id="socket-time">Última atualização: -</div>
         </div>
+    </div>
 
+    <div class="dashboard-grid" style="margin-top: 20px; grid-template-columns: 1fr;">
+        <div class="card" style="width: 100%;">
+            <h3>Componente Geográfica do Dispositivo (Leaflet Map)</h3>
+            <div id="map"></div>
+            <div id="map-error" style="color: #ff4d4d; margin-top: 10px; display: none;">
+                Falha ao renderizar componente geográfico (API inacessível).
+            </div>
+        </div>
     </div>
 </main>
 
 <script>
-    async function atualizarWeatherREST() {
-        const urlREST = "https://cjsg.ddns.net:8443/weather/values";
-        
-        try {
-            const response = await fetch(urlREST, {
-                method: 'GET',
-                mode: 'cors',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
+    // --- Inicialização do Mapa Leaflet ---
+    let map = L.map('map').setView([0, 0], 2); 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    let marker = L.marker([0, 0]).addTo(map).bindPopup("Dispositivo IoT").openPopup();
 
-            if (!response.ok) {
-                throw new Error(`Erro HTTP: ${response.status}`);
+    // --- Inicialização dos Gráficos (Chart.js) ---
+    const ctxWeather = document.getElementById('weatherChart').getContext('2d');
+    const weatherChart = new Chart(ctxWeather, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                { label: 'Temp (°C)', data: [], borderColor: '#ff9f43', tension: 0.4, yAxisID: 'y' },
+                { label: 'Hum (%)', data: [], borderColor: '#00ced1', tension: 0.4, yAxisID: 'y1' }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { type: 'linear', display: true, position: 'left' },
+                y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } }
             }
+        }
+    });
 
+    const ctxSocket = document.getElementById('socketChart').getContext('2d');
+    const socketChart = new Chart(ctxSocket, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{ label: 'Potência Ativa (W)', data: [], borderColor: '#20bf6b', tension: 0.4 }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    function adicionarDadosGrafico(chart, label, dados) {
+        if (chart.data.labels.length > 10) {
+            chart.data.labels.shift();
+            chart.data.datasets.forEach(dataset => dataset.data.shift());
+        }
+        chart.data.labels.push(label);
+        dados.forEach((val, i) => {
+            chart.data.datasets[i].data.push(val);
+        });
+        chart.update();
+    }
+
+    // --- Atualização de Dados (Chamadas às rotas locais do Flask) ---
+    async function atualizarWeatherREST() {
+        try {
+            const response = await fetch("/api/weather/values");
+            if (!response.ok) throw new Error();
             const data = await response.json();
             
-            document.getElementById('temp-val').innerText = data.temperature !== undefined ? `${data.temperature} °C` : "N/D";
-            document.getElementById('hum-val').innerText = data.humidity !== undefined ? `${data.humidity} %` : "N/D";
-            document.getElementById('weather-loc').innerText = data.name ? `${data.name} (${data.latitude}, ${data.longitude})` : "Disponível";
-            document.getElementById('weather-time').innerText = `Última atualização: ${data.time || new Date().toLocaleTimeString()}`;
+            const temp = data.temperature !== undefined ? data.temperature : 0;
+            const hum = data.humidity !== undefined ? data.humidity : 0;
+            const hora = new Date().toLocaleTimeString();
+
+            document.getElementById('temp-val').innerText = `${temp} °C`;
+            document.getElementById('hum-val').innerText = `${hum} %`;
+            document.getElementById('weather-loc').innerText = data.name ? `${data.name}` : "Disponível";
+            document.getElementById('weather-time').innerText = `Última atualização: ${data.time || hora}`;
             
+            adicionarDadosGrafico(weatherChart, hora.substring(0, 5), [temp, hum]);
         } catch (error) {
-            console.error("Erro CORS ou de Rede ao aceder à API REST Weather:", error);
-            document.getElementById('temp-val').innerText = "Erro (CORS/Rede)";
-            document.getElementById('hum-val').innerText = "Erro (CORS/Rede)";
+            document.getElementById('temp-val').innerText = "Erro API Local";
+            document.getElementById('hum-val').innerText = "Erro API Local";
         }
     }
+
+    async function atualizarMapaEPosition() {
+    try {
+        const response = await fetch("/api/weather/position");
+        if (!response.ok) {
+            document.getElementById('map-error').style.display = 'block';
+            return;
+        }
+        const data = await response.json();
+        
+        // Verifica se os dados de latitude e longitude são válidos e diferentes de 0
+        if (data && data.latitude && data.longitude) {
+            const lat = parseFloat(data.latitude);
+            const lon = parseFloat(data.longitude);
+            
+            if (lat !== 0 && lon !== 0) {
+                map.setView([lat, lon], 13);
+                marker.setLatLng([lat, lon])
+                      .setPopupContent(`<b>${data.name || 'Estação Meteorológica'}</b><br>Lat: ${lat}<br>Lon: ${lon}`)
+                      .openPopup();
+                document.getElementById('map-error').style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error("Erro ao carregar mapa:", error);
+        document.getElementById('map-error').style.display = 'block';
+    }
+}
 
     async function atualizarSocketMQTT() {
         try {
             const response = await fetch('/api/iot/socket');
             if (response.ok) {
                 const data = await response.json();
+                const hora = new Date().toLocaleTimeString();
                 
-                document.getElementById('power-val').innerText = data.power !== undefined ? `${data.power} W` : "0 W";
-                document.getElementById('volts-val').innerText = data.voltage !== undefined ? `${data.voltage} V` : "0 V";
-                document.getElementById('current-val').innerText = data.current !== undefined ? `${data.current} A` : "0 A";
-                document.getElementById('energy-val').innerText = data.energy !== undefined ? `${data.energy} Wh` : "0 Wh";
-                document.getElementById('freq-val').innerText = data.frequency !== undefined ? `${data.frequency} Hz` : "0 Hz";
-                document.getElementById('socket-time').innerText = `Última atualização: ${data.time || new Date().toLocaleTimeString()}`;
+                const power = data.power !== undefined ? data.power : 0;
+                const volts = data.voltage !== undefined ? data.voltage : 0;
+                const current = data.current !== undefined ? data.current : 0;
+                const energy = data.energy !== undefined ? data.energy : 0;
+
+                document.getElementById('power-val').innerText = `${power} W`;
+                document.getElementById('volts-current-val').innerText = `${volts} V / ${current} A`;
+                document.getElementById('energy-val').innerText = `${energy} Wh`;
+                document.getElementById('socket-time').innerText = `Última atualização: ${data.time || hora}`;
+                
+                adicionarDadosGrafico(socketChart, hora.substring(0, 5), [power]);
             }
         } catch (error) {
-            console.error("Erro ao obter dados MQTT do backend:", error);
+            console.error("Erro ao obter dados MQTT:", error);
         }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
         atualizarWeatherREST();
+        atualizarMapaEPosition();
         atualizarSocketMQTT();
 
         setInterval(atualizarWeatherREST, 5000);
