@@ -5,7 +5,7 @@
 O presente relatório surge no âmbito da Fase 1 da unidade curricular de Computação Distribuída. O trabalho prático consiste na evolução e adaptação de uma aplicação Web previamente desenvolvida na unidade curricular de Programação Web para um ambiente moderno e isolado assente em microsserviços e contentores.
 Os objetivos principais desta fase centram-se na adoção do modelo arquitetural cliente/servidor e na utilização prática de tecnologias de contentorização.
 
-## Arquitetura do Sistema e Moddelo Cliente/Servidor
+## Arquitetura do Sistema e Modelo Cliente/Servidor
 
 O sistema foi redesenhado seguindo uma arquitetura clássica de duas camadas, em que cada camada é executada num servidor logicamente distinto e isolado:
 - Backend: Contentor Flask
