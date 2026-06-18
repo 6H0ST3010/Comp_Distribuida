@@ -28,3 +28,9 @@ Para integrar estes sensores, convergimos dois modelos de comunicação na nossa
 3. Aceda à aplicação via **http://localhost:8080**.
 4. Dirija-se à área do novo **Dashboard IoT**.
 5. Neste ecrã verá os dados a serem atualizados: as métricas ambientais via pedidos REST em *background*, e o consumo de energia atualizado imediatamente pelas publicações MQTT.
+
+## Utilização de IA
+No desenvolvimento desta fase foi utilizado o chat para ajudar na realização do mesmo, resolver alguns problemas e na documentação do relatório.
+Alguns exemplos de prompts utilizados foram:
+- "Tenho um servidor Flask em Python e preciso de ligar um cliente mqtt que subscreva o tópico /power num broker externo de forma contínua."
+- "Preciso de criar um gráfico de linhas dinâmico. Como faço para adicionar um novo ponto  a cada 5 segundos."
