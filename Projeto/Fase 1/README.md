@@ -26,3 +26,8 @@ Optámos por manter a base de dados em ficheiros `.json` porque ofereciam uma le
    ```
 3. Aceda à loja no browser no endereço **http://localhost:8080**.
 4. Interaja com o site normalmente. Por baixo dos panos, o *Backend* irá comunicar com o *Data Service* via TCP/Sockets sempre que for preciso aceder ou alterar informação.
+
+## Utilização de IA
+No desenvolvimento desta fase foi utilizado o chat para ajudar na realização do mesmo, resolver alguns problemas e na documentação do relatório.
+Alguns exemplos de prompts utilizados foram:
+- "Escreve um script simples em Python que utilize a biblioteca socket para se ligar a um servidor local . O script deve enviar um payload JSON com {"action": "get_all_users"}"
