@@ -46,7 +46,7 @@ Para correr a versão final do projeto (recomendamos executar a Fase 3):
 1. Certifique-se de que tem o **Docker** e o **Docker Compose** instalados na sua máquina.
 2. Abra o terminal e navegue até à diretoria da fase desejada, copie o caminho do explorador de ficheiros:
    ```bash
-   cd C:\Users\[nomeuser]\Downloads\Comp_Distribuida-main\Projeto\Fase3
+   cd Projeto\Fase3
    ```
 3. Execute o comando para construir e iniciar os contentores:
    ```bash
