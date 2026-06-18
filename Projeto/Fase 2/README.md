@@ -29,3 +29,8 @@ Mantivemos a base de dados suportada pelos ficheiros `.json` nativos. Esta escol
    ```
 3. Aceda ao interface em **http://localhost:8080**.
 4. Ao clicar na página das Lojas, o *Backend* faz um pedido HTTP à *API REST*, que abre um Socket com o *Data Service* para consultar a lista guardada no `.json`, devolvendo a resposta até ao utilizador.
+
+## Utilização de IA
+No desenvolvimento desta fase foi utilizado o chat para ajudar na realização do mesmo, resolver alguns problemas e na documentação do relatório.
+Alguns exemplos de prompts utilizados foram:
+- "Preciso de converter uma API HTTP Flask num intermediário que envia os dados para um servidor backend via Sockets TCP em Python. Como posso estruturar o ciclo de vida da mensagem (request/response) usando JSON sobre Sockets?"
